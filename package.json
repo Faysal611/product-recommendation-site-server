@@ -1,0 +1,28 @@
+{
+  "name": "product-recommendation-system-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Programming-Hero-Web-Course4/b11a11-server-side-Faysal611.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Programming-Hero-Web-Course4/b11a11-server-side-Faysal611/issues"
+  },
+  "homepage": "https://github.com/Programming-Hero-Web-Course4/b11a11-server-side-Faysal611#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "mongodb": "^6.17.0",
+    "nodemon": "^3.1.10"
+  }
+}
