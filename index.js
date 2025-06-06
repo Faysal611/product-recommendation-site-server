@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config()
 const port = 3000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 //middlewares
 app.use(cors());
@@ -39,17 +39,72 @@ async function run() {
             res.send("Let me cook")
         })
 
-        app.post("/addRecipe", async(req, res) => {
+        app.post("/addRecipe", async (req, res) => {
             const formData = req.body;
             const result = await queryCollection.insertOne(formData);
             res.send(result);
         })
 
+        app.get("/getLatest", async (req, res) => {
+            const data = await queryCollection.find({}).sort({ createdAt: -1 }).limit(6).toArray();
+            res.send(data)
+        })
+
+        app.get("/query/:queryID", async (req, res) => {
+            const queryID = req.params.queryID
+            const query = { _id: new ObjectId(queryID) }
+            const result = await queryCollection.findOne(query)
+            res.send(result)
+        })
+
+        app.post("/postRecommendation", async (req, res) => {
+            const data = req.body
+            const result = await recommendationCollection.insertOne(data);
+            const filter = { _id: new ObjectId(data.queryID) }
+            await queryCollection.updateOne(filter, { $inc: { recommendationCount: 1 } })
+            res.send(result)
+        })
+
+        app.get("/getQueryRecommendations", async (req, res) => {
+            const queryID = req.query.queryID;
+            const query = { queryID: queryID }
+            const result = await recommendationCollection.find(query).toArray()
+
+            res.send(result)
+        })
+
+        app.get("/myQuries", async (req, res) => {
+            const queryEmail = req.query.email;
+            const query = { "user.email": queryEmail };
+            const result = await queryCollection.find(query).sort({ createdAt: -1 }).toArray();
+            res.send(result);
+        })
+
+        app.put("/updateQuery", async (req, res) => {
+            const data = req.body;
+            const filter = { "user.email": req.body.user.email }
+            const update = {
+                $set: {
+                    ...data
+                }
+            }
+            const result = await queryCollection.updateOne(filter, update);
+            res.send(result)
+        })
+
+        app.delete("/deleteQuery", async (req, res) => {
+            const doc = {_id: new ObjectId(req.body._id)};
+            const result = await queryCollection.deleteOne(doc)
+            res.send(result);
+        })
+
+        
+
         app.listen(port)
 
     } finally {
         // Ensures that the client will close when you finish/error
-        await client.close();
+        // await client.close();
     }
 }
 run().catch(console.dir);
