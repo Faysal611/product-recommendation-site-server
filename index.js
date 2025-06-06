@@ -98,7 +98,39 @@ async function run() {
             res.send(result);
         })
 
-        
+        app.get("/queries", async (req, res) => {
+            const result = await queryCollection.find().sort({createdAt: 1}).toArray();
+            res.send(result);
+        })
+
+        app.get("/myRecommendations", async (req, res) => {
+            const query = {"recommender.email": req.query.email}
+            console.log(query)
+            const result = await recommendationCollection.find(query).toArray();
+            res.send(result)
+        })
+
+        app.delete("/deleteRecommendation", async (req, res) => {
+            const _id = req.query._id;
+            const filter = {_id: new ObjectId(_id)};
+            const result = await recommendationCollection.deleteOne(filter)
+            res.send(result);
+        })
+
+        app.get("/recommendationsForMe", async (req, res) => {
+            const queryEmail = req.query.email;
+            const filter = {"user.email": queryEmail}
+            const queryArr = await queryCollection.find(filter).toArray();
+            let result = [];
+
+            for(const query of queryArr) {
+                const filter = {queryID: query._id.toString()};
+                const recommendations = await recommendationCollection.find(filter).toArray();
+                result.push(...recommendations)
+            }
+
+            res.send(result)
+        })
 
         app.listen(port)
 
