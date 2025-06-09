@@ -4,11 +4,34 @@ const app = express();
 require('dotenv').config()
 const port = 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const admin = require("firebase-admin");
+const serviceAccount = require("./product-recommendation-auth-firebase-adminsdk-fbsvc-79b835ee97.json");
+const { getAuth } = require('firebase-admin/auth');
 
 //middlewares
 app.use(cors());
 app.use(express.json());
 
+const verifyUser = (req, res, next) => {
+
+    if(!req.headers.authorization) {
+        return res.status(401).send({ message: "unauthorized" })
+    }
+    const accessToken = req.headers?.authorization?.split(" ")[1];
+    getAuth().verifyIdToken(accessToken)
+    .then(decodedToken => {
+        req.decoded = decodedToken;
+        next();
+    })
+    .catch(err => {
+        return res.status(401).send({message: "unauthorized"})
+    })
+}
+
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
 
 const uri = `mongodb+srv://${process.env.DB_username}:${process.env.DB_password}@product-cluster.e1jgwum.mongodb.net/?retryWrites=true&w=majority&appName=product-cluster`;
@@ -73,8 +96,11 @@ async function run() {
             res.send(result)
         })
 
-        app.get("/myQuries", async (req, res) => {
+        app.get("/myQuries", verifyUser, async (req, res) => {
             const queryEmail = req.query.email;
+            if(req.decoded.email != queryEmail) {
+                return res.status(401).send({message: "forbidden"})
+            }
             const query = { "user.email": queryEmail };
             const result = await queryCollection.find(query).sort({ createdAt: -1 }).toArray();
             res.send(result);
@@ -103,21 +129,25 @@ async function run() {
             res.send(result);
         })
 
-        app.get("/myRecommendations", async (req, res) => {
+        app.get("/myRecommendations", verifyUser, async (req, res) => {
+            if(req.decoded.email != req.query.email) {
+                return res.status(401).send({ message: "forbidden" })
+            }
             const query = {"recommender.email": req.query.email}
-            console.log(query)
             const result = await recommendationCollection.find(query).toArray();
             res.send(result)
         })
 
         app.delete("/deleteRecommendation", async (req, res) => {
             const _id = req.query._id;
+            const queryID = req.query.queryID;
             const filter = {_id: new ObjectId(_id)};
             const result = await recommendationCollection.deleteOne(filter)
+            await queryCollection.updateOne({ queryID }, { $inc: { recommendationCount : -1}})
             res.send(result);
         })
 
-        app.get("/recommendationsForMe", async (req, res) => {
+        app.get("/recommendationsForMe", verifyUser, async (req, res) => {
             const queryEmail = req.query.email;
             const filter = {"user.email": queryEmail}
             const queryArr = await queryCollection.find(filter).toArray();
