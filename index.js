@@ -5,7 +5,10 @@ require('dotenv').config()
 const port = 3000;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
-const serviceAccount = require("./product-recommendation-auth-firebase-adminsdk-fbsvc-79b835ee97.json");
+
+const decoded = Buffer.from(process.env.FB_key, "base64").toString("utf8");
+console.log(decoded)
+const serviceAccount = JSON.parse(decoded)
 const { getAuth } = require('firebase-admin/auth');
 
 //middlewares
@@ -50,8 +53,8 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
         const db = client.db("globalDB");
         const queryCollection = db.collection("queryCollection");
