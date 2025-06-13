@@ -7,7 +7,6 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const admin = require("firebase-admin");
 
 const decoded = Buffer.from(process.env.FB_key, "base64").toString("utf8");
-console.log(decoded)
 const serviceAccount = JSON.parse(decoded)
 const { getAuth } = require('firebase-admin/auth');
 
@@ -111,7 +110,9 @@ async function run() {
 
         app.put("/updateQuery", async (req, res) => {
             const data = req.body;
-            const filter = { "user.email": req.body.user.email }
+            const filter = { "_id": new ObjectId(req.body._id) }
+            delete data._id;
+            console.log(data)
             const update = {
                 $set: {
                     ...data

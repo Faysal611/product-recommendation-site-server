@@ -1,3 +1,4 @@
 node_modules
 .env
 product-recommendation-auth-firebase-adminsdk-fbsvc-79b835ee97.json
+.vercel
