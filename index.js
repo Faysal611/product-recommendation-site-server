@@ -71,7 +71,7 @@ async function run() {
         })
 
         app.get("/getLatest", async (req, res) => {
-            const data = await queryCollection.find({}).sort({ createdAt: -1 }).limit(6).toArray();
+            const data = await queryCollection.find({}).sort({ createdAt: -1 }).limit(8).toArray();
             res.send(data)
         })
 
